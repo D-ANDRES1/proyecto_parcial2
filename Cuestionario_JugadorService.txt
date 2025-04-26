@@ -1,0 +1,90 @@
+Cuestionario Resuelto - Proyecto con JugadorService y DatabaseManager
+
+1. En el método Crear de la clase JugadorService, ¿por qué se utiliza SCOPE_IDENTITY() en la consulta SQL y qué beneficio aporta al código?
+Respuesta:
+SCOPE_IDENTITY() se utiliza para obtener el ID del último registro insertado dentro del mismo ámbito. Esto asegura que el ID retornado corresponde exactamente al jugador recién creado.
+
+2. En el método Eliminar del servicio de jugadores, ¿por qué se verifica la existencia de elementos en el inventario antes de eliminar un jugador y qué problema está previniendo esta comprobación?
+Respuesta:
+Se evita para evitar el errores de las claves foraneas y los scripts relacionados en la base de datos.
+
+3. ¿Qué ventaja ofrece la línea using var connection = _dbManager.GetConnection(); frente a crear y cerrar la conexión manualmente? Menciona un posible problema que podría ocurrir si no se usara esta estructura.
+Respuesta:
+El using garantiza que la conexión se cierre correctamente incluso si ocurre una excepción, sin eso el control automático, podrían quedar conexiones abiertas, lo cual saturaría el servidor.
+
+4. En la clase DatabaseManager, ¿por qué la variable _connectionString está marcada como readonly y qué implicaciones tendría para la seguridad si no tuviera este modificador?
+Respuesta:
+El modificador readonly evita cambios intencionados en el string de conexión. 
+
+5. Si quisieras agregar un sistema de logros para los jugadores, ¿qué cambios realizarías en el modelo de datos actual y qué nuevos métodos deberías implementar en los servicios existentes?
+Respuesta:
+Se crearía una tabla Logros y una tabla de relación JugadorLogros. Se implementarían métodos como AgregarLogro, ObtenerLogrosJugador y EliminarLogro(para poder quitar).
+y obiamente las propiedades de este, si estan relacionado con la obtencion de bloque, etc
+
+6. ¿Qué sucede con la conexión a la base de datos cuando ocurre una excepción dentro de un bloque using como el que se utiliza en los métodos del JugadorService?
+Respuesta
+La conexión se cierra automáticamente, garantizando la liberación de recursos aunque ocurra un error.
+
+7. En el método ObtenerTodos() del JugadorService, ¿qué ocurre si la consulta SQL no devuelve ningún jugador? ¿Devuelve null o una lista vacía? ¿Por qué crees que se diseñó de esta manera?
+Respuesta:
+Devuelve una lista vacía. Esto facilita el manejo del resultado evitando verificaciones innecesarias y posibles excepciones por null.
+
+8. Si necesitaras implementar una funcionalidad para registrar el tiempo jugado por cada jugador, ¿qué cambios harías en la clase Jugador y cómo modificarías los métodos del servicio para mantener actualizada esta información?
+Respuesta:
+Se agregaría una propiedad TiempoJugado en el modelo Jugador. Los métodos de actualización se alteran para aumentar ese tiempo al finalizar cada sesión.
+
+9. En el método TestConnection() de la clase DatabaseManager, ¿qué propósito cumple el bloque try-catch y por qué es importante devolver un valor booleano en lugar de simplemente lanzar la excepción?
+Respuesta:
+El try-catch permite manejar errores y evitar caídas del sistema. Devolver un booleano permite saber si la conexión fue exitosa de forma segura y controlada.
+
+10. Si observas el patrón de diseño utilizado en este proyecto, ¿por qué crees que se separaron las clases en carpetas como Models, Services y Utils? ¿Qué ventajas ofrece esta estructura para el mantenimiento y evolución del proyecto?
+Respuesta
+Esta organización sigue el principio de responsabilidad única. Mejora la legibilidad, el mantenimiento, la reutilización del código y facilita el trabajo en equipo.
+
+11. En la clase InventarioService, cuando se llama el método AgregarItem, ¿por qué es necesario usar una transacción SQL? ¿Qué problemas podría causar si no se implementara una transacción en este caso?
+Respuesta:
+La transacción asegura que todas las operaciones relacionadas se realicen correctamente. Si falla algo, todo se revierte. Sin transacción, podrían generarse datos incompletos o corruptos.
+
+12. Observa el constructor de JugadorService: ¿Por qué recibe un DatabaseManager como parámetro en lugar de crearlo internamente? ¿Qué patrón de diseño se está aplicando y qué ventajas proporciona?
+Respuesta:
+Se aplica el patrón de inyección de dependencias. Esto facilita el testeo, la reutilización del componente y promueve una arquitectura más limpia y flexible.
+
+13. En el método ObtenerPorId de JugadorService, ¿qué ocurre cuando se busca un ID que no existe en la base de datos? ¿Cuál podría ser una forma alternativa de manejar esta situación?
+Respuesta:
+Retorna null o un valor nulo. Alternativamente, se podría lanzar una excepción personalizada o devolver un objeto con un estado de "no encontrado".
+
+14. Si necesitas implementar un sistema de "amigos" donde los jugadores puedan conectarse entre sí, ¿cómo modificarías el modelo de datos y qué nuevos métodos agregarías a los servicios existentes?
+Respuesta:
+Se agregaría una tabla Amigos con referencias entre jugadores. Los métodos incluirían AgregarAmigo, EliminarAmigo y ListarAmigos.
+
+15. En la implementación actual del proyecto, ¿cómo se maneja la fecha de creación de un jugador? ¿Se establece desde el código o se delega esta responsabilidad a la base de datos? ¿Cuáles son las ventajas del enfoque utilizado?
+Respuesta:
+Lo ideal es que lo haga la base de datos con DEFAULT GETDATE(). Así se garantiza consistencia, independientemente de la máquina cliente.
+
+16. ¿Por qué en el método GetConnection() de DatabaseManager se crea una nueva instancia de SqlConnection cada vez en lugar de reutilizar una conexión existente? ¿Qué implicaciones tendría para el rendimiento y la concurrencia?
+Respuesta:
+Se evitan conflictos y errores de concurrencia. Reutilizar conexiones puede ser riesgoso si no se gestionan correctamente, especialmente en entornos multiusuario.
+
+17. Cuando se actualiza un recurso en el inventario, ¿qué ocurriría si dos usuarios intentan modificar el mismo recurso simultáneamente? ¿Cómo podrías mejorar el código para manejar este escenario?
+Respuesta:
+Puede sobrescribirse los cambios. Para evitarlo, se puede aplicar control de concurrencia optimista (verificando versiones) o usar bloqueos de registro.
+
+18. En el método Actualizar de JugadorService, ¿por qué es importante verificar el valor de rowsAffected después de ejecutar la consulta? ¿Qué información adicional proporciona al usuario?
+Respuesta:
+Permite saber si realmente se modificó algún registro. Si rowsAffected es 0, se puede informar que el jugador no existe o no se hicieron cambios.
+
+19. Si quisieras implementar un sistema de registro (logging) para seguir todas las operaciones realizadas en la base de datos, ¿dónde colocarías este código y cómo lo implementarías para afectar mínimamente la estructura actual?
+Respuesta:
+Se puede crear una clase Logger y llamarla desde los servicios después de cada operación. Usar interfaces permitiría integrarlo sin modificar demasiado el código existente.
+
+20. Observa cómo se maneja la relación entre jugadores e inventario en el proyecto. Si necesitaras agregar una nueva entidad "Mundo" donde cada jugador puede existir en múltiples mundos, ¿cómo modificarías el esquema de la base de datos y la estructura del código para implementar esta funcionalidad?
+Respuesta:
+Agregar una tabla Mundos y otra JugadorMundo para representar la relación. En el código, métodos como AsignarJugadorAMundo y ListarMundosPorJugador.
+
+21. ¿Qué es un SqlConnection y cómo se usa?
+Respuesta:
+Es una clase de .NET para establecer una conexión a SQL Server. Se crea una instancia, se abre con .Open(), se usa para ejecutar comandos, y se cierra con .Close() (o automáticamente con using).
+
+22. ¿Para qué sirven los SqlParameter?
+Respuesta:
+Se usan para pasar parámetros a las consultas SQL de forma segura. Evitan inyecciones SQL y permiten manejar valores dinámicos en sentencias SQL.
